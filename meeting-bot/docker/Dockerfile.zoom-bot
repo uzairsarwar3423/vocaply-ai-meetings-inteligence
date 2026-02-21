@@ -1,0 +1,21 @@
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ../bot-service/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt playwright
+RUN playwright install chromium
+
+COPY ../shared ./shared
+# Individual bot logic will be copied here in actual implementation
+# COPY ./zoom-logic ./zoom-logic
+
+ENV DISPLAY=:99
+
+CMD Xvfb :99 -screen 0 1280x1024x24 & python -m bot.zoom
