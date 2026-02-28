@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "Vocaply Meet Audio Capture",
+    "version": "1.0.0",
+    "description": "Captures audio from Google Meet for bot recording",
+    "permissions": [
+        "tabCapture",
+        "tabs",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://meet.google.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "host_permissions": [
+        "https://meet.google.com/*"
+    ]
+}

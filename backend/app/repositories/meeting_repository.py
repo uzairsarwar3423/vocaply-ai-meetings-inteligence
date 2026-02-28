@@ -128,14 +128,14 @@ class MeetingRepository:
         **filters,
     ) -> Tuple[List[Meeting], int]:
         """
-        List meetings with filters + offset pagination.
+        List meetings with filters + offset pagination + eager loading.
         Returns (items, total_count).
         """
         stmt = self._base_query(company_id)
         stmt = self._apply_filters(stmt, **filters)
 
         # Count total (before pagination)
-        count_stmt = select(func.count()).select_from(stmt.subquery())
+        count_stmt = stmt.with_only_columns(func.count(Meeting.id))
         total = (await self.db.execute(count_stmt)).scalar_one()
 
         # Apply sort
@@ -147,6 +147,12 @@ class MeetingRepository:
         # Apply pagination
         offset = (page - 1) * per_page
         stmt   = stmt.offset(offset).limit(per_page)
+
+        # Add eager loading to prevent N+1 queries
+        stmt = stmt.options(
+            selectinload(Meeting.action_items),
+            selectinload(Meeting.summary),
+        )
 
         result = await self.db.execute(stmt)
         return result.scalars().all(), total
@@ -281,7 +287,7 @@ class MeetingRepository:
             stmt = stmt.where(Meeting.tags.contains(params.tags))
 
         # Count
-        count_stmt = select(func.count()).select_from(stmt.subquery())
+        count_stmt = stmt.with_only_columns(func.count(Meeting.id))
         total      = (await self.db.execute(count_stmt)).scalar_one()
 
         # Sort

@@ -13,6 +13,7 @@ from typing import List, Optional, Tuple
 
 from sqlalchemy import select, update, delete, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.action_item import ActionItem, ActionItemStatus
 from app.schemas.pagination import PaginationParams
@@ -52,11 +53,18 @@ class ActionItemRepository:
         item_id:    uuid.UUID,
         company_id: str,
     ) -> Optional[ActionItem]:
-        """Get a single action item by id (company-scoped)"""
-        stmt = select(ActionItem).where(
-            and_(
-                ActionItem.id         == item_id,
-                ActionItem.company_id == company_id,
+        """Get a single action item by id (company-scoped) with eager loaded relationships"""
+        stmt = (
+            select(ActionItem)
+            .where(
+                and_(
+                    ActionItem.id         == item_id,
+                    ActionItem.company_id == company_id,
+                )
+            )
+            .options(
+                selectinload(ActionItem.meeting),
+                selectinload(ActionItem.assigned_to),
             )
         )
         result = await self.db.execute(stmt)
@@ -71,7 +79,7 @@ class ActionItemRepository:
         meeting_id: uuid.UUID,
         company_id: Optional[uuid.UUID | str] = None,
     ) -> List[ActionItem]:
-        """Get all action items for a meeting (ordered by creation time)"""
+        """Get all action items for a meeting (ordered by creation time) with eager loaded relationships"""
         conditions = [ActionItem.meeting_id == meeting_id]
         if company_id is not None:
             conditions.append(ActionItem.company_id == str(company_id))
@@ -80,6 +88,9 @@ class ActionItemRepository:
             select(ActionItem)
             .where(and_(*conditions))
             .order_by(ActionItem.created_at.asc())
+            .options(
+                selectinload(ActionItem.assigned_to),
+            )
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
@@ -99,42 +110,50 @@ class ActionItemRepository:
     ) -> Tuple[List[ActionItem], int]:
         """
         Paginated list of action items across a company with rich filtering.
+        Optimized with eager loading to prevent N+1 queries.
 
         Returns:
             (items, total_count)
         """
-        stmt = select(ActionItem).where(ActionItem.company_id == company_id)
+        # Create base stmt without eager loading for COUNT query
+        count_stmt = select(ActionItem).where(ActionItem.company_id == company_id)
 
         # Filters
         if status:
-            stmt = stmt.where(ActionItem.status == status)
+            count_stmt = count_stmt.where(ActionItem.status == status)
         if priority:
-            stmt = stmt.where(ActionItem.priority == priority)
+            count_stmt = count_stmt.where(ActionItem.priority == priority)
         if assignee_id:
-            stmt = stmt.where(ActionItem.assigned_to_id == assignee_id)
+            count_stmt = count_stmt.where(ActionItem.assigned_to_id == assignee_id)
         if meeting_id:
-            stmt = stmt.where(ActionItem.meeting_id == meeting_id)
+            count_stmt = count_stmt.where(ActionItem.meeting_id == meeting_id)
         if due_before:
-            stmt = stmt.where(ActionItem.due_date <= due_before)
+            count_stmt = count_stmt.where(ActionItem.due_date <= due_before)
         if is_ai_generated is not None:
-            stmt = stmt.where(ActionItem.is_ai_generated == is_ai_generated)
+            count_stmt = count_stmt.where(ActionItem.is_ai_generated == is_ai_generated)
 
         # Count
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        count_result = await self.db.execute(count_stmt)
+        count_total_stmt = select(func.count()).select_from(count_stmt.subquery())
+        count_result = await self.db.execute(count_total_stmt)
         total = count_result.scalar_one()
 
         # Sort
         sort_col = getattr(ActionItem, sort_by, ActionItem.created_at)
-        stmt = stmt.order_by(
+        count_stmt = count_stmt.order_by(
             sort_col.desc() if sort_dir == "desc" else sort_col.asc()
         )
 
         # Paginate
         if pagination:
-            stmt = stmt.offset(pagination.offset).limit(pagination.limit)
+            count_stmt = count_stmt.offset(pagination.offset).limit(pagination.limit)
 
-        result = await self.db.execute(stmt)
+        # Add eager loading for data retrieval
+        count_stmt = count_stmt.options(
+            selectinload(ActionItem.assigned_to),
+            selectinload(ActionItem.meeting),
+        )
+
+        result = await self.db.execute(count_stmt)
         return list(result.scalars().all()), total
 
     async def list_by_assignee(

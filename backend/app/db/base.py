@@ -1,6 +1,5 @@
-# Import all models here so that Alembic can find them
+# Import the Base class for SQLAlchemy models
 from app.models.base import Base
-from app.models import (
-    Company, User, UserSession, Meeting, 
-    Transcript, TranscriptMetadata, ActionItem, MeetingSummary
-)
+
+# Note: Model imports are handled in app/models/__init__.py to avoid circular imports
+# Alembic will discover models through the app.models module

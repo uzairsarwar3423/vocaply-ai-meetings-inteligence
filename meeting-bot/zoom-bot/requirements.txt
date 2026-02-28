@@ -1,0 +1,30 @@
+# ============================================
+# Zoom Bot Requirements
+# Python 3.11+
+# ============================================
+
+# ── HTTP & WebSocket ────────────────────────
+httpx==0.26.0
+websockets==12.0
+
+# ── JWT Authentication ──────────────────────
+PyJWT==2.8.0
+
+# ── Audio Processing ────────────────────────
+numpy==1.26.3
+wave  # Built-in
+
+# ── Configuration ───────────────────────────
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# ── Async ───────────────────────────────────
+asyncio  # Built-in
+
+# ── Note ────────────────────────────────────
+# Zoom Meeting SDK is a C++ library that must be
+# installed separately. See README for instructions.
+#
+# Download from: https://marketplace.zoom.us/docs/sdk/native-sdks/
+# Install to: /usr/local/lib/zoom-sdk/

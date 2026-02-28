@@ -141,3 +141,40 @@ async def broadcast_transcript_chunk(
         channel=SubscriptionChannel.MEETING,
     )
     logger.debug(f"broadcast_transcript_chunk → {count} connections (meeting={meeting_id})")
+
+
+async def broadcast_to_meeting(
+    meeting_id: str,
+    event_data: dict,
+) -> None:
+    """
+    Day 19: Broadcaster for bot events.
+    Sends raw event data to all users in the company who are viewing the meeting.
+    
+    This is a simpler wrapper that uses the raw dict structure from Day 19 components.
+    """
+    # We need the company_id to use broadcast_to_company.
+    # In Day 19, we'll fetch it from the meeting or just broadcast to everyone 
+    # if company_id is not available (but it's better to have it).
+    
+    # For now, we'll try to find a connection for this meeting to get company_id
+    # or just use a placeholder if needed. 
+    # Real implementation should probably have company_id passed in.
+    
+    # Let's iterate over connections to find company_id for this meeting_id
+    company_id = None
+    for conn in ws_manager._connections.values():
+        if conn.is_subscribed(SubscriptionChannel.MEETING, meeting_id):
+            company_id = conn.company_id
+            break
+            
+    if not company_id:
+        return
+
+    await ws_manager.broadcast_to_company(
+        company_id=company_id,
+        event=event_data.get("type", ServerEvent.MEETING_UPDATED),
+        data=event_data.get("data"),
+        channel=SubscriptionChannel.MEETING,
+        resource_id=meeting_id
+    )

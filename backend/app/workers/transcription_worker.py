@@ -15,7 +15,7 @@ from celery.utils.log import get_task_logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.workers.celery_app import celery_app
-from app.db.session import async_session_maker
+from app.db.session import AsyncSessionLocal
 from app.services.transcription import DeepgramService, TranscriptProcessor
 from app.repositories.transcript_repository import TranscriptRepository
 from app.repositories.meeting_repository import MeetingRepository
@@ -34,7 +34,7 @@ class DatabaseTask(Task):
 
     async def get_db(self) -> AsyncSession:
         """Get async database session"""
-        async with async_session_maker() as session:
+        async with AsyncSessionLocal() as session:
             yield session
 
 
@@ -116,7 +116,7 @@ async def _process_transcription(
     diarize: bool,
 ) -> Dict[str, Any]:
     """Core async transcription logic"""
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         meeting_repo = MeetingRepository(db)
         transcript_repo = TranscriptRepository(db)
         
@@ -199,7 +199,7 @@ async def _update_meeting_status(
     error: str = None,
 ):
     """Update meeting status after failure"""
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         meeting_repo = MeetingRepository(db)
         meeting = await meeting_repo.get_by_id(meeting_id, meeting_id)
         if meeting:
@@ -237,7 +237,7 @@ def check_stuck_jobs():
 
 async def _check_stuck_jobs_async() -> Dict[str, Any]:
     """Find and handle stuck jobs"""
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         meeting_repo = MeetingRepository(db)
         
         # Find meetings stuck in transcribing > 1 hour

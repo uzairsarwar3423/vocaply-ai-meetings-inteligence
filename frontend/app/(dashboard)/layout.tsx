@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import {
     LayoutDashboard,
     Calendar,
+    Video,
     CheckSquare,
     Users,
     Settings,
@@ -15,7 +16,8 @@ import {
 
 const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Meetings", href: "/meetings", icon: Calendar },
+    { label: "Meetings", href: "/meetings", icon: Video },
+    { label: "Calendar", href: "/calendar", icon: Calendar },
     { label: "Action Items", href: "/action-items", icon: CheckSquare },
     { label: "Team", href: "/team", icon: Users },
     { label: "Settings", href: "/settings", icon: Settings },

@@ -223,11 +223,40 @@ class Meeting(Base):
     transcript_metadata = relationship("TranscriptMetadata", back_populates="meeting", uselist=False, cascade="all, delete-orphan")
     
     # AI Analysis relationships
-    action_items = relationship("ActionItem",     back_populates="meeting",      cascade="all, delete-orphan", lazy="dynamic")
-    summary      = relationship("MeetingSummary", back_populates="meeting",      cascade="all, delete-orphan", uselist=False, lazy="select")
+    # NOTE: this used to be a ``dynamic`` relationship which returns a
+    # ``Query`` object instead of a list. that choice was made early on to
+    # allow filtering (e.g. ``meeting.action_items.filter(...)``) without
+    # triggering a SQL load, but it has a severe downside: dynamic
+    # relationships **do not support eager loading**. the list endpoint
+    # applies ``selectinload(Meeting.action_items)`` for performance, which
+    # raised the ``InvalidRequestError`` seen in the logs:
+    #
+    #     'Meeting.action_items' does not support object population - eager
+    #      loading cannot be applied.
+    #
+    # The simplest fix is to make the relationship normal (select/selectin)
+    # so that the repository can eagerly load it without errors. callers
+    # that previously treated ``meeting.action_items`` as a query will still
+    # receive a list; there were no usages of the dynamic behaviour in the
+    # codebase, so this change is safe and preserves the earlier performance
+    # optimisation. if filtering is required it can be done by querying the
+    # ``ActionItem`` table directly.
+    action_items = relationship(
+        "ActionItem",
+        back_populates="meeting",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    summary = relationship(
+        "MeetingSummary",
+        back_populates="meeting",
+        cascade="all, delete-orphan",
+        uselist=False,
+        lazy="select",
+    )
     
     # Bot sessions
-    # bot_sessions = relationship("BotSession",     back_populates="meeting",      cascade="all, delete-orphan", lazy="dynamic")
+    bot_session = relationship("BotSession", back_populates="meeting", uselist=False, cascade="all, delete-orphan")
 
     # ------------------------------------------
     # COMPOSITE INDEXES

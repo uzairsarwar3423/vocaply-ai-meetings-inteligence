@@ -2,6 +2,7 @@
 
 import { useAuthStore } from "@/store/authStore";
 import { useMeetings } from "@/hooks/useMeetings";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Video, CheckSquare, Users, UploadCloud, ArrowRight } from "lucide-react";
@@ -11,6 +12,22 @@ import FileUploader from "@/components/meetings/FileUploader/FileUploader";
 export default function DashboardPage() {
     const { user } = useAuthStore();
     const { meetings, isLoading, totalMeetings } = useMeetings();
+    const [scheduledEvents, setScheduledEvents] = useState([]);
+
+    useEffect(() => {
+        const fetchScheduled = async () => {
+            try {
+                const res = await fetch('/api/v1/calendar/scheduled');
+                if (res.ok) {
+                    const data = await res.json();
+                    setScheduledEvents(data.events || []);
+                }
+            } catch (error) {
+                console.error("Failed to fetch scheduled events", error);
+            }
+        };
+        fetchScheduled();
+    }, []);
 
     // Get the most recent meeting for the Quick Upload widget
     const recentMeeting = meetings && meetings.length > 0 ? meetings[0] : null;
@@ -105,34 +122,83 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                {/* Quick Upload Widget */}
-                <div className="space-y-6">
-                    <h2 className="text-lg font-bold font-outfit text-gray-900">Quick Upload</h2>
-                    <Card className="border-gray-100/50 shadow-sm h-full">
-                        <CardContent className="p-6">
-                            {recentMeeting ? (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <UploadCloud className="text-primary w-5 h-5" />
-                                        <p className="text-sm font-semibold text-gray-700">
-                                            Upload to: <span className="text-primary">{recentMeeting.title}</span>
-                                        </p>
+                {/* Quick Upload & Calendar Widget */}
+                <div className="space-y-8">
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-bold font-outfit text-gray-900">Upcoming Schedule</h2>
+                            <Link href="/calendar">
+                                <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/5 h-8">
+                                    View Calendar
+                                </Button>
+                            </Link>
+                        </div>
+                        <Card className="border-gray-100/50 shadow-sm">
+                            <CardContent className="p-0">
+                                <div className="p-4 border-b border-gray-50 bg-gray-50/30">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                                        <span className="text-xs font-medium text-gray-600">Auto-join active</span>
                                     </div>
-                                    <FileUploader
-                                        meetingId={recentMeeting.id}
-                                        onSuccess={() => window.location.reload()}
-                                    />
                                 </div>
-                            ) : (
-                                <div className="text-center py-8">
-                                    <p className="text-gray-400 text-sm mb-4">Create a meeting first to upload recordings.</p>
-                                    <Link href="/meetings/new">
-                                        <Button size="sm" className="w-full">Create Meeting</Button>
-                                    </Link>
+                                <div className="divide-y divide-gray-50 max-h-[300px] overflow-y-auto">
+                                    {scheduledEvents.length > 0 ? (
+                                        scheduledEvents.map((event: any) => (
+                                            <div key={event.id} className="p-4 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
+                                                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary flex-shrink-0">
+                                                    <Video size={18} />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-semibold text-gray-900 truncate">{event.title}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Sync active
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="p-8 text-center">
+                                            <p className="text-sm text-gray-400">No events scheduled today</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                <div className="p-4 bg-gray-50/50">
+                                    <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                                        Last checked: Just now
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="space-y-6">
+                        <h2 className="text-lg font-bold font-outfit text-gray-900">Quick Upload</h2>
+                        <Card className="border-gray-100/50 shadow-sm">
+                            <CardContent className="p-6">
+                                {recentMeeting ? (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <UploadCloud className="text-primary w-5 h-5" />
+                                            <p className="text-sm font-semibold text-gray-700">
+                                                Upload to: <span className="text-primary truncate block max-w-[150px]">{recentMeeting.title}</span>
+                                            </p>
+                                        </div>
+                                        <FileUploader
+                                            meetingId={recentMeeting.id}
+                                            onSuccess={() => window.location.reload()}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <p className="text-gray-400 text-sm mb-4">Create a meeting first to upload recordings.</p>
+                                        <Link href="/meetings/new">
+                                            <Button size="sm" className="w-full">Create Meeting</Button>
+                                        </Link>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </div>

@@ -6,6 +6,8 @@ from app.models.transcript import Transcript, TranscriptMetadata
 from app.models.action_item import ActionItem
 from app.models.meeting_summary import MeetingSummary
 from app.models.ai_usage import AIUsage, AIFeatureType, AIRequestStatus
+from app.models.calendar_event import CalendarEvent
+from app.models.bot_session import BotSession
 
 __all__ = [
     "Company", 
@@ -19,6 +21,8 @@ __all__ = [
     "AIUsage",
     "AIFeatureType",
     "AIRequestStatus",
+    "CalendarEvent",
+    "BotSession"
 ]
 
 

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -51,12 +51,13 @@ elif _async_base.startswith("postgres://"):
 else:
     ASYNC_DATABASE_URL = _async_base
 
-# NullPool = every request gets a fresh connection, no pool-level caching.
-# This is the safest option when SQLAlchemy sits behind any connection proxy.
+# Use default async QueuePool for better performance
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    poolclass=NullPool,          # no connection pool — avoids ALL pgbouncer issues
-    pool_pre_ping=True,
+    pool_size=20,                # use connection pooling for high concurrency
+    max_overflow=10,
+    pool_pre_ping=True,          # verify connections before reuse
+    echo=False,                  # set to True for SQL query logging
 )
 
 AsyncSessionLocal = async_sessionmaker(

@@ -16,6 +16,8 @@ from app.api.v1 import (
     summaries,      # AI Meeting Summaries (Day 13)
     websocket,      # WebSocket (Day 14)
     webhooks,       # External/Internal Webhooks (Day 15)
+    bot,            # Bot Integration (Day 19)
+    calendar,       # Calendar Integration (Day 20)
 )
 
 # ============================================
@@ -92,6 +94,18 @@ api_router.include_router(
     webhooks.router,
     prefix="/webhooks",
     tags=["Webhooks"]
+)
+
+# ── Bot Integration (Day 19) ──────────────────────────────────────────────────
+api_router.include_router(
+    bot.router,
+    tags=["Bot"]
+)
+
+# ── Calendar Integration (Day 20) ─────────────────────────────────────────────
+api_router.include_router(
+    calendar.router,
+    tags=["Calendar"]
 )
 
 # ── Future Endpoints ────────────────────────────────────────────

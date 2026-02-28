@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.performance import timing_middleware
 
 
 @asynccontextmanager
@@ -40,6 +41,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add performance middleware for request timing
+app.middleware("http")(timing_middleware)
 
 from app.api.v1 import api_router
 app.include_router(api_router, prefix=settings.API_V1_STR)

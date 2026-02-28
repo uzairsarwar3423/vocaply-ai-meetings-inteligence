@@ -1,13 +1,14 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.services import auth_service
 from app.schemas import user as user_schema
 from app.schemas import auth as auth_schema
 from app.schemas import token as token_schema
-from app.db.session import get_db
+from app.db.session import get_db, get_async_db
 
 router = APIRouter()
 
@@ -22,15 +23,20 @@ def register(
     return auth_service.register_user(db, user_in=user_in)
 
 @router.post("/login", response_model=token_schema.Token)
-def login(
+async def login(
     request: Request,
     login_data: auth_schema.Login,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ) -> Any:
     """
     Login user and return tokens.
+    Async endpoint for non-blocking password verification.
     """
-    user = auth_service.authenticate(db, login_data=login_data)
+    import time
+    t0 = time.time()
+    user = await auth_service.authenticate_async(db, login_data=login_data)
+    t1 = time.time()
+    print(f"[TIMING] authenticate_async took {t1 - t0:.2f}s")
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -45,9 +51,12 @@ def login(
     user_agent = request.headers.get("user-agent")
     ip_address = request.client.host
     
-    return auth_service.create_tokens_for_user(
+    tokens = await auth_service.create_tokens_for_user_async(
         db, user_id=user.id, user_agent=user_agent, ip_address=ip_address
     )
+    t2 = time.time()
+    print(f"[TIMING] create_tokens_for_user_async took {t2 - t1:.2f}s")
+    return tokens
 
 @router.post("/refresh", response_model=token_schema.Token)
 def refresh_token(
@@ -71,8 +80,8 @@ def logout(
     return {"msg": "Successfully logged out"}
 
 @router.get("/me", response_model=user_schema.User)
-def read_user_me(
-    current_user: deps.User = Depends(deps.get_current_user),
+async def read_user_me(
+    current_user: deps.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Get current user.

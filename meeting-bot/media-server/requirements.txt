@@ -1,0 +1,26 @@
+# ============================================
+# Media Server Requirements
+# Python 3.11+
+# ============================================
+
+# ── WebSocket Server ────────────────────────
+websockets==12.0
+
+# ── HTTP Client (webhooks) ──────────────────
+httpx==0.26.0
+
+# ── Storage (Backblaze B2) ──────────────────
+boto3==1.34.34
+botocore==1.34.34
+
+# ── Audio Processing ────────────────────────
+numpy==1.26.3
+
+# ── Configuration ───────────────────────────
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# ── Note ────────────────────────────────────
+# Additional system dependencies required:
+# - FFmpeg (apt install ffmpeg)

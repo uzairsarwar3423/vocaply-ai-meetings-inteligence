@@ -11,8 +11,11 @@ from alembic import context
 sys.path.append(path.join(path.dirname(__file__), '..'))
 
 # Use our app models
-from app.db.base import Base
+from app.models.base import Base
 from app.core.config import settings
+
+# Import all models for Alembic to discover them
+from app import models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

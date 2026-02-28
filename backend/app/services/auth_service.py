@@ -2,16 +2,19 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
+from app.models.user import User
 from app.repositories import user_repo, company_repo, session_repo
 from app.repositories.company_repository import CompanyCreate
 from app.repositories.session_repository import SessionCreate
 from app.schemas.user import UserCreate
 from app.schemas.auth import Login, TokenRefresh
 from app.schemas.token import Token
-from app.utils.password import verify_password
+from app.utils.password import verify_password, verify_password_async
 from app.utils.jwt import create_access_token, create_refresh_token, decode_token
 from app.core.config import settings
 
@@ -99,5 +102,56 @@ class AuthService:
         session = session_repo.get_by_refresh_token(db, refresh_token=refresh_token)
         if session:
             session_repo.update(db, db_obj=session, obj_in={"is_revoked": True})
+
+    # ============================================
+    # ASYNC METHODS (for FastAPI async endpoints)
+    # ============================================
+
+    async def authenticate_async(self, db: AsyncSession, *, login_data: Login) -> Optional[User]:
+        """Async user authentication with non-blocking password verification"""
+        stmt = select(User).where(User.email == login_data.email)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            return None
+        
+        # Use async password verification to avoid blocking
+        if not await verify_password_async(login_data.password, user.password_hash):
+            return None
+        
+        return user
+
+    async def create_tokens_for_user_async(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: Union[str, uuid.UUID], 
+        user_agent: str = None, 
+        ip_address: str = None
+    ) -> Token:
+        """Async token creation"""
+        access_token = create_access_token(subject=user_id)
+        refresh_token = create_refresh_token(subject=user_id)
+        
+        # Save session (using async repository)
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+        from app.models.user_session import UserSession
+        
+        session = UserSession(
+            user_id=user_id,
+            refresh_token=refresh_token,
+            expires_at=expires_at,
+            user_agent=user_agent,
+            ip_address=ip_address,
+            is_revoked=False
+        )
+        db.add(session)
+        await db.commit()
+        
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token
+        )
 
 auth_service = AuthService()

@@ -1,0 +1,24 @@
+# ============================================
+# Google Meet Bot Requirements
+# Python 3.11+
+# ============================================
+
+# ── Puppeteer (Browser Automation) ──────────
+pyppeteer==1.0.2
+
+# ── HTTP & WebSocket ────────────────────────
+httpx==0.26.0
+websockets==10.4
+# ── Async ───────────────────────────────────
+asyncio  # Built-in
+
+# ── Configuration ───────────────────────────
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# ── Note ────────────────────────────────────
+# Additional system dependencies required:
+# - Google Chrome (installed via setup script)
+# - PulseAudio (apt install pulseaudio)
+# - FFmpeg (apt install ffmpeg)

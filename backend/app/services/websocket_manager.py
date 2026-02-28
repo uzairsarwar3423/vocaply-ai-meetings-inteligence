@@ -217,6 +217,7 @@ class WebSocketManager:
         event: ServerEvent,
         data: Any = None,
         channel: Optional[SubscriptionChannel] = None,
+        resource_id: Optional[str] = None,
         exclude_user_id: Optional[str] = None,
     ) -> int:
         """
@@ -233,7 +234,7 @@ class WebSocketManager:
                 continue
             if exclude_user_id and conn.user_id == exclude_user_id:
                 continue
-            if channel and not conn.is_subscribed(channel):
+            if channel and not conn.is_subscribed(channel, resource_id):
                 continue
             await self._send(conn, event, data)
             count += 1

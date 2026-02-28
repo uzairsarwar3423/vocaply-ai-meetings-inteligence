@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, AsyncIterator
 from datetime import datetime
 
 import httpx
-from deepgram import DeepgramClient, PrerecordedOptions, FileSource
+from deepgram import AsyncDeepgramClient
 
 from app.core.config import settings
 
@@ -24,7 +24,7 @@ class DeepgramService:
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or settings.DEEPGRAM_API_KEY
-        self.client = DeepgramClient(self.api_key)
+        self.client = AsyncDeepgramClient(api_key=self.api_key)
         self.base_url = "https://api.deepgram.com/v1"
 
     # ============================================
@@ -51,7 +51,9 @@ class DeepgramService:
         - results.channels[0].alternatives[0].paragraphs.paragraphs (speaker turns)
         """
         try:
-            options = PrerecordedOptions(
+            # Make request
+            response = await self.client.listen.v1.media.transcribe_url(
+                url=audio_url,
                 model=model,
                 language=language if not detect_language else None,
                 detect_language=detect_language,
@@ -63,15 +65,8 @@ class DeepgramService:
                 utt_split=0.8,  # Split utterances on 0.8s silence
             )
 
-            # Make request
-            source = {"url": audio_url}
-            response = self.client.listen.prerecorded.v("1").transcribe_url(
-                source=source,
-                options=options
-            )
-
-            # Convert to dict
-            result = response.to_dict() if hasattr(response, "to_dict") else response
+            # Extract result
+            result = response.model_dump() if hasattr(response, "model_dump") else response.dict() if hasattr(response, "dict") else response
 
             return {
                 "success": True,
@@ -102,11 +97,8 @@ class DeepgramService:
             with open(file_path, "rb") as audio:
                 buffer_data = audio.read()
 
-            payload: FileSource = {
-                "buffer": buffer_data,
-            }
-
-            options = PrerecordedOptions(
+            response = await self.client.listen.v1.media.transcribe_file(
+                request=buffer_data,
                 model=kwargs.get("model", "nova-2"),
                 language=kwargs.get("language", "en"),
                 diarize=kwargs.get("diarize", True),
@@ -115,12 +107,7 @@ class DeepgramService:
                 paragraphs=kwargs.get("paragraphs", True),
             )
 
-            response = self.client.listen.prerecorded.v("1").transcribe_file(
-                source=payload,
-                options=options
-            )
-
-            result = response.to_dict() if hasattr(response, "to_dict") else response
+            result = response.model_dump() if hasattr(response, "model_dump") else response.dict() if hasattr(response, "dict") else response
 
             return {
                 "success": True,

@@ -22,6 +22,23 @@ from app.core.logging import logger
 
 router = APIRouter()
 
+@router.post("/bot")
+async def bot_webhook(
+    event_data: dict,
+    db: AsyncSession = Depends(get_async_db)
+):
+    """
+    Unified bot webhook handler for Day 19.
+    Processes events via BotWebhookHandler service.
+    """
+    from app.services.bot import BotWebhookHandler
+    
+    handler = BotWebhookHandler(db)
+    await handler.handle_event(event_data)
+    
+    return {"status": "success"}
+
+
 @router.post("/bot-events")
 async def handle_bot_event(
     event: BotEvent,

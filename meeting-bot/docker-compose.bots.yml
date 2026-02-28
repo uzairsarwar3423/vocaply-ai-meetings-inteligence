@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  # ──────────────────────────────────────────────────────────────
+  # Redis (shared with main platform)
+  # ──────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: vocaply-bot-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - bot_redis_data:/data
+    command: redis-server --appendonly yes
+
+  # ──────────────────────────────────────────────────────────────
+  # Bot Service (Orchestration)
+  # ──────────────────────────────────────────────────────────────
+  bot-service:
+    build:
+      context: ./bot-service
+      dockerfile: Dockerfile
+    container_name: vocaply-bot-service
+    ports:
+      - "8001:8001"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      BACKEND_API_URL: http://host.docker.internal:8000
+      BACKEND_API_KEY: your-internal-api-key
+      POOL_PRE_WARM: 5
+      BROWSER_HEADLESS: "true"
+      RECORDING_PATH: /recordings
+    volumes:
+      - ./bot-service:/app
+      - bot_recordings:/recordings
+    depends_on:
+      - redis
+    # Share host network for accessing host services
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  bot_redis_data:
+  bot_recordings:
