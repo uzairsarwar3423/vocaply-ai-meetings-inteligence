@@ -22,7 +22,7 @@ apiClient.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle token refresh on 401
+// Response Interceptor: Handle token refresh on 401 gff
 apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
