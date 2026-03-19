@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { apiClient } from '@/lib/api/client';
 
-export default function SlackCallbackPage() {
+function SlackCallbackHandler() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -60,5 +60,18 @@ export default function SlackCallbackPage() {
             <h2 className="text-xl font-semibold mb-2">Connecting to Slack...</h2>
             <p className="text-neutral-500">Please wait while we finalize your account connection.</p>
         </div>
+    );
+}
+
+export default function SlackCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Loading Slack connection...</h2>
+            </div>
+        }>
+            <SlackCallbackHandler />
+        </Suspense>
     );
 }

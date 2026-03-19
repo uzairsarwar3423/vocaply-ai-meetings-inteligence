@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useZoomAuth } from "../../../hooks/useZoomAuth";
 import { toast } from "sonner";
 
-export default function ZoomCallbackPage() {
+function ZoomCallbackHandler() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { handleZoomCallback } = useZoomAuth();
@@ -37,7 +37,7 @@ export default function ZoomCallbackPage() {
                 setError(message);
                 toast.error(message);
                 console.error("Zoom callback error:", err);
-                
+
                 // Redirect to login after delay
                 setTimeout(() => {
                     router.push("/login");
@@ -76,4 +76,19 @@ export default function ZoomCallbackPage() {
 
     // Should not reach here as handleZoomCallback redirects on success
     return null;
+}
+
+export default function ZoomCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                    <p className="text-gray-600">Loading auth data...</p>
+                </div>
+            </div>
+        }>
+            <ZoomCallbackHandler />
+        </Suspense>
+    );
 }

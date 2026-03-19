@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { apiClient } from '@/lib/api/client';
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackHandler() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -64,5 +64,18 @@ export default function GoogleCallbackPage() {
             <h2 className="text-xl font-semibold mb-2">{status}</h2>
             <p className="text-neutral-500">Please wait while we finalize your account connection.</p>
         </div>
+    );
+}
+
+export default function GoogleCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Loading Google connection...</h2>
+            </div>
+        }>
+            <GoogleCallbackHandler />
+        </Suspense>
     );
 }
