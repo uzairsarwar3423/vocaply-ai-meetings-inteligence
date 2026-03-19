@@ -6,20 +6,35 @@ import { Moon, Sun, Monitor, Globe, Clock, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useAuthStore } from "@/store/authStore";
+import { usersApi } from "@/lib/api/users";
 import { toast } from "sonner";
 
 export function PreferencesSection() {
+    const { user, updateUser } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
-    const [theme, setTheme] = useState("system");
-    const [language, setLanguage] = useState("en");
-    const [timezone, setTimezone] = useState("America/New_York");
 
-    const handleSave = () => {
+    const [theme, setTheme] = useState<"light" | "dark" | "system">(
+        user?.preferences?.theme || "system"
+    );
+    const [language, setLanguage] = useState(user?.preferences?.language || "en");
+    const [timezone, setTimezone] = useState("America/New_York");
+    const [autoJoin, setAutoJoin] = useState(user?.preferences?.auto_join_meetings ?? true);
+
+    const handleSave = async () => {
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            const updated = await usersApi.updatePreferences({ theme, language, auto_join_meetings: autoJoin });
+            updateUser(updated);
             toast.success("Preferences saved successfully");
-        }, 800);
+        } catch (err: unknown) {
+            const message =
+                (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+                "Failed to save preferences";
+            toast.error(message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -48,35 +63,22 @@ export function PreferencesSection() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                        <button
-                            onClick={() => setTheme("light")}
-                            className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-neutral-100 hover:border-neutral-200'}`}
-                        >
-                            <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
-                                <Sun className="w-6 h-6 text-neutral-600" />
-                            </div>
-                            <span className="font-medium">Light</span>
-                        </button>
-
-                        <button
-                            onClick={() => setTheme("dark")}
-                            className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === 'dark' ? 'border-primary bg-primary/5' : 'border-neutral-100 hover:border-neutral-200'}`}
-                        >
-                            <div className="w-12 h-12 rounded-full bg-neutral-900 flex items-center justify-center">
-                                <Moon className="w-6 h-6 text-white" />
-                            </div>
-                            <span className="font-medium">Dark</span>
-                        </button>
-
-                        <button
-                            onClick={() => setTheme("system")}
-                            className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === 'system' ? 'border-primary bg-primary/5' : 'border-neutral-100 hover:border-neutral-200'}`}
-                        >
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-neutral-100 to-neutral-800 flex items-center justify-center">
-                                <Monitor className="w-6 h-6 text-neutral-500 mix-blend-difference" />
-                            </div>
-                            <span className="font-medium">System</span>
-                        </button>
+                        {(["light", "dark", "system"] as const).map((t) => (
+                            <button
+                                key={t}
+                                onClick={() => setTheme(t)}
+                                className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === t ? "border-primary bg-primary/5" : "border-neutral-100 hover:border-neutral-200"
+                                    }`}
+                            >
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${t === "light" ? "bg-neutral-100" : t === "dark" ? "bg-neutral-900" : "bg-gradient-to-br from-neutral-100 to-neutral-800"
+                                    }`}>
+                                    {t === "light" && <Sun className="w-6 h-6 text-neutral-600" />}
+                                    {t === "dark" && <Moon className="w-6 h-6 text-white" />}
+                                    {t === "system" && <Monitor className="w-6 h-6 text-neutral-500 mix-blend-difference" />}
+                                </div>
+                                <span className="font-medium capitalize">{t}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -92,7 +94,6 @@ export function PreferencesSection() {
                                 <Globe className="w-4 h-4 text-neutral-400" />
                                 Language
                             </Label>
-                            {/* Simple select dropdown since Select components might not be fully implemented and we just want UI */}
                             <select
                                 id="language"
                                 value={language}
@@ -122,6 +123,7 @@ export function PreferencesSection() {
                                 <option value="America/Denver">Mountain Time (MT)</option>
                                 <option value="America/Los_Angeles">Pacific Time (PT)</option>
                                 <option value="Europe/London">London (GMT)</option>
+                                <option value="Asia/Karachi">Pakistan Standard Time (PKT)</option>
                             </select>
                         </div>
                     </div>
@@ -144,28 +146,10 @@ export function PreferencesSection() {
                                     <p className="text-sm text-neutral-500">Automatically connect to audio when joining a meeting.</p>
                                 </div>
                             </div>
-                            <Switch defaultChecked />
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                            <div className="flex items-start gap-4">
-                                <div className="mt-1 bg-white p-2 rounded-lg border border-neutral-100 text-neutral-500">
-                                    <Globe className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <p className="font-medium">Default Transcription Language</p>
-                                    <p className="text-sm text-neutral-500">Set the default language for the AI to transcribe.</p>
-                                </div>
-                            </div>
-                            <div className="w-32">
-                                <select
-                                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none text-sm"
-                                >
-                                    <option value="en">Auto-detect</option>
-                                    <option value="en-US">English</option>
-                                    <option value="es">Spanish</option>
-                                </select>
-                            </div>
+                            <Switch
+                                checked={autoJoin}
+                                onCheckedChange={setAutoJoin}
+                            />
                         </div>
                     </div>
                 </div>

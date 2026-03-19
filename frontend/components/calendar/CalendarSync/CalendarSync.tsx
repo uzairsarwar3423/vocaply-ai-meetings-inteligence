@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Loader2, Check, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { Badge } from '@/components/ui/badge';
+import { apiClient } from '@/lib/api/client';
 
 interface CalendarProvider {
     id: 'google' | 'outlook';
@@ -30,20 +31,19 @@ export default function CalendarSync({ onSyncComplete }: CalendarSyncProps) {
     const handleConnect = async (providerId: 'google' | 'outlook') => {
         // In production, this would trigger OAuth flow
         if (providerId === 'google') {
-            // Redirect to Google OAuth
-            const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-            const redirectUri = `${window.location.origin}/api/auth/google/callback`;
-            const scope = 'https://www.googleapis.com/auth/calendar.readonly';
-
-            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-                `client_id=${clientId}&` +
-                `redirect_uri=${redirectUri}&` +
-                `response_type=code&` +
-                `scope=${scope}&` +
-                `access_type=offline&` +
-                `prompt=consent`;
-
-            window.location.href = authUrl;
+            try {
+                const response = await apiClient.get('/integrations/google/connect');
+                if (response.data?.authorization_url) {
+                    window.location.href = response.data.authorization_url;
+                }
+            } catch (error) {
+                console.error('Connect error:', error);
+                toast({
+                    title: 'Connection Failed',
+                    description: 'Failed to initiate Google connection.',
+                    variant: 'destructive',
+                });
+            }
         } else {
             toast({
                 title: 'Coming Soon',
@@ -56,22 +56,12 @@ export default function CalendarSync({ onSyncComplete }: CalendarSyncProps) {
         setIsSyncing(true);
 
         try {
-            const response = await fetch('/api/v1/calendar/sync', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    provider: providerId,
-                    days_ahead: 7,
-                }),
+            const response = await apiClient.post('/calendar/sync', {
+                provider: providerId,
+                days_ahead: 7,
             });
 
-            if (!response.ok) {
-                throw new Error('Sync failed');
-            }
-
-            const data = await response.json();
+            const data = response.data;
 
             toast({
                 title: 'Sync Complete',
@@ -102,19 +92,29 @@ export default function CalendarSync({ onSyncComplete }: CalendarSyncProps) {
     };
 
     const handleDisconnect = async (providerId: 'google' | 'outlook') => {
-        // In production, revoke OAuth token
-        setProviders(prev =>
-            prev.map(p =>
-                p.id === providerId
-                    ? { ...p, connected: false, lastSyncedAt: undefined }
-                    : p
-            )
-        );
+        try {
+            await apiClient.post('/calendar/disconnect', { provider: providerId });
+            
+            setProviders(prev =>
+                prev.map(p =>
+                    p.id === providerId
+                        ? { ...p, connected: false, lastSyncedAt: undefined }
+                        : p
+                )
+            );
 
-        toast({
-            title: 'Disconnected',
-            description: `${providerId === 'google' ? 'Google Calendar' : 'Outlook'} has been disconnected.`,
-        });
+            toast({
+                title: 'Disconnected',
+                description: `${providerId === 'google' ? 'Google Calendar' : 'Outlook'} has been disconnected.`,
+            });
+        } catch (error) {
+            console.error('Disconnect error:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to disconnect calendar.',
+                variant: 'destructive',
+            });
+        }
     };
 
     return (

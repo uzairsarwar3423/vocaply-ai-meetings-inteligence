@@ -21,6 +21,9 @@ class UserInDBBase(UserBase):
     id: uuid.UUID
     company_id: uuid.UUID
     is_email_verified: bool
+    avatar_url: Optional[str] = None
+    preferences: dict = {"theme": "system", "language": "en", "auto_join_meetings": False}
+    notification_settings: dict = {"email_alerts": True, "push_notifications": True, "meeting_reminders": True}
     created_at: datetime
     updated_at: datetime
 
@@ -28,6 +31,24 @@ class UserInDBBase(UserBase):
 
 class User(UserInDBBase):
     pass
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+class UserPreferencesUpdate(BaseModel):
+    theme: Optional[str] = None
+    language: Optional[str] = None
+    auto_join_meetings: Optional[bool] = None
+
+class NotificationSettingsUpdate(BaseModel):
+    email_alerts: Optional[bool] = None
+    push_notifications: Optional[bool] = None
+    meeting_reminders: Optional[bool] = None
+
+class UserPasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
 
 class UserInDB(UserInDBBase):
     password_hash: str

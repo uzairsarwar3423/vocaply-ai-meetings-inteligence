@@ -5,6 +5,7 @@ import { AuthState, User, AuthTokens } from "../types/auth";
 interface AuthStore extends AuthState {
     setAuth: (user: User, tokens: AuthTokens) => void;
     setTokens: (tokens: AuthTokens) => void;
+    updateUser: (user: Partial<User>) => void;
     logout: () => void;
     setLoading: (isLoading: boolean) => void;
     _hasHydrated: boolean;
@@ -27,6 +28,11 @@ export const useAuthStore = create<AuthStore>()(
                     isAuthenticated: true,
                     isLoading: false,
                 }),
+
+            updateUser: (updates) =>
+                set((state) => ({
+                    user: state.user ? { ...state.user, ...updates } : null,
+                })),
 
             setTokens: (tokens) =>
                 set((state) => ({

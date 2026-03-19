@@ -51,13 +51,21 @@ elif _async_base.startswith("postgres://"):
 else:
     ASYNC_DATABASE_URL = _async_base
 
-# Use default async QueuePool for better performance
+# Optimized async engine for high performance and scalability
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    pool_size=20,                # use connection pooling for high concurrency
-    max_overflow=10,
-    pool_pre_ping=True,          # verify connections before reuse
-    echo=False,                  # set to True for SQL query logging
+    pool_size=12,                # Balanced pool size
+    max_overflow=20,             # Allow bursts
+    pool_pre_ping=True,          # Essential for Supabase reliability
+    pool_recycle=300,            # Refresh connections every 5 mins
+    connect_args={
+        "command_timeout": 30,    # Don't let queries hang forever
+        "server_settings": {
+            "jit": "off",         # JIT can slow down simple queries on small tables
+            "statement_timeout": "60000", # 60s limit for any single statement
+        }
+    },
+    echo=False,
 )
 
 AsyncSessionLocal = async_sessionmaker(

@@ -29,7 +29,7 @@ from app.schemas.pagination import (
 from app.services.meeting import MeetingService
 from app.repositories.meeting_repository import MeetingRepository
 from app.db.session import get_db, get_async_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user_async as get_current_user
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Video, CheckSquare, Users, UploadCloud, ArrowRight } from "lucide-react";
 import Link from 'next/link';
 import FileUploader from "@/components/meetings/FileUploader/FileUploader";
+import { apiClient } from "@/lib/api/client";
 
 export default function DashboardPage() {
     const { user } = useAuthStore();
@@ -17,11 +18,8 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchScheduled = async () => {
             try {
-                const res = await fetch('/api/v1/calendar/scheduled');
-                if (res.ok) {
-                    const data = await res.json();
-                    setScheduledEvents(data.events || []);
-                }
+                const res = await apiClient.get('/calendar/scheduled');
+                setScheduledEvents(res.data.events || []);
             } catch (error) {
                 console.error("Failed to fetch scheduled events", error);
             }

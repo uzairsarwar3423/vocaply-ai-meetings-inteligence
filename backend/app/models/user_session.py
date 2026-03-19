@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, TIMESTAMP, Boolean, JSON
+from sqlalchemy import Column, String, ForeignKey, TIMESTAMP, Boolean, JSON, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.models.base import Base
@@ -22,3 +22,10 @@ class UserSession(Base):
     last_used_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     user = relationship("User", back_populates="sessions")
+
+    # ── Indexes ──────────────────────────────────
+    __table_args__ = (
+        # New optimized indexes
+        Index("idx_user_sessions_user_created", "user_id", "created_at"),
+        Index("idx_user_sessions_expires", "expires_at"),  # For cleanup jobs
+    )

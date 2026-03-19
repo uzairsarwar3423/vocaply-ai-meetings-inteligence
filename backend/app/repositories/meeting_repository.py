@@ -34,12 +34,14 @@ class MeetingRepository:
     # BASE QUERY HELPER
     # ==========================================
 
-    def _base_query(self, company_id: UUID):
+    def _base_query(self, company_id: Any):
         """Base query with company_id isolation + soft-delete filter"""
+        # Convert UUID to string manually to ensure index usage on VARCHAR column
+        cid_str = str(company_id)
         return (
             select(Meeting)
             .where(
-                Meeting.company_id == company_id,
+                Meeting.company_id == cid_str,
                 Meeting.deleted_at.is_(None),
             )
         )
