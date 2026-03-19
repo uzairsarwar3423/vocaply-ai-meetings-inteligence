@@ -5,6 +5,7 @@ import CalendarSync from '@/components/calendar/CalendarSync/CalendarSync';
 import EventList from '@/components/calendar/EventList/EventList';
 import AutoJoinSettings from '@/components/calendar/AutoJoinSettings/AutoJoinSettings';
 import UpcomingMeetings from '@/components/calendar/UpcomingMeetings/UpcomingMeetings';
+import { apiClient } from '@/lib/api/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar as CalendarIcon, Settings, ShieldCheck, Clock } from 'lucide-react';
 
@@ -18,18 +19,12 @@ export default function CalendarPage() {
         try {
             // In a real app, these would be API calls
             // Fetch events
-            const eventsRes = await fetch('/api/v1/calendar/events');
-            if (eventsRes.ok) {
-                const data = await eventsRes.json();
-                setEvents(data.events || []);
-            }
+            const eventsRes = await apiClient.get('/calendar/events');
+            setEvents(eventsRes.data.events || []);
 
             // Fetch scheduled auto-joins
-            const scheduledRes = await fetch('/api/v1/calendar/scheduled');
-            if (scheduledRes.ok) {
-                const data = await scheduledRes.json();
-                setScheduledMeetings(data.events || []);
-            }
+            const scheduledRes = await apiClient.get('/calendar/scheduled');
+            setScheduledMeetings(scheduledRes.data.events || []);
         } catch (error) {
             console.error('Failed to fetch calendar data:', error);
         } finally {

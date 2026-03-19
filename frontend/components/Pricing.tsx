@@ -65,8 +65,8 @@ const Pricing = () => {
                         <div
                             key={tier.name}
                             className={`relative p-10 rounded-[2.5rem] border ${tier.popular
-                                    ? "border-primary shadow-xl bg-white scale-105 z-10"
-                                    : "border-gray-100 bg-gray-50/50"
+                                ? "border-primary shadow-xl bg-white scale-105 z-10"
+                                : "border-gray-100 bg-gray-50/50"
                                 }`}
                         >
                             {tier.popular && (

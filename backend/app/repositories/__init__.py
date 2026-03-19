@@ -2,6 +2,7 @@ from .user_repository import user_repo
 from .company_repository import company_repo
 from .session_repository import session_repo
 from .meeting_repository import MeetingRepository
+from .meeting_attendee_repository import meeting_attendee_repo
 from .transcript_repository import TranscriptRepository
 from .action_item_repository import ActionItemRepository
 from .summary_repository import SummaryRepository
@@ -12,6 +13,7 @@ __all__ = [
     "company_repo",
     "session_repo",
     "MeetingRepository",
+    "meeting_attendee_repo",
     "TranscriptRepository",
     "ActionItemRepository",
     "SummaryRepository",

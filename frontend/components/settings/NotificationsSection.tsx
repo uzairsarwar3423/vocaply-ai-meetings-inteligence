@@ -5,17 +5,36 @@ import { motion } from "framer-motion";
 import { Bell, Mail, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useAuthStore } from "@/store/authStore";
+import { usersApi } from "@/lib/api/users";
 import { toast } from "sonner";
 
 export function NotificationsSection() {
+    const { user, updateUser } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSave = () => {
+    const [emailAlerts, setEmailAlerts] = useState(user?.notification_settings?.email_alerts ?? true);
+    const [pushNotifications, setPushNotifications] = useState(user?.notification_settings?.push_notifications ?? true);
+    const [meetingReminders, setMeetingReminders] = useState(user?.notification_settings?.meeting_reminders ?? true);
+
+    const handleSave = async () => {
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            const updated = await usersApi.updateNotifications({
+                email_alerts: emailAlerts,
+                push_notifications: pushNotifications,
+                meeting_reminders: meetingReminders,
+            });
+            updateUser(updated);
             toast.success("Notification preferences updated");
-        }, 800);
+        } catch (err: unknown) {
+            const message =
+                (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+                "Failed to update notifications";
+            toast.error(message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -47,31 +66,17 @@ export function NotificationsSection() {
                     <div className="space-y-2 mt-4 ml-11">
                         <div className="flex items-center justify-between py-3 border-b border-neutral-50">
                             <div>
-                                <p className="font-medium text-sm">Meeting Summaries</p>
-                                <p className="text-xs text-neutral-500">Get AI-generated summaries after every meeting.</p>
+                                <p className="font-medium text-sm">Meeting Summaries & Action Items</p>
+                                <p className="text-xs text-neutral-500">Get AI-generated summaries and tasks after every meeting.</p>
                             </div>
-                            <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between py-3 border-b border-neutral-50">
-                            <div>
-                                <p className="font-medium text-sm">Action Items</p>
-                                <p className="text-xs text-neutral-500">Receive a list of tasks assigned to you.</p>
-                            </div>
-                            <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between py-3">
-                            <div>
-                                <p className="font-medium text-sm">Product Updates</p>
-                                <p className="text-xs text-neutral-500">News about new features and improvements.</p>
-                            </div>
-                            <Switch />
+                            <Switch checked={emailAlerts} onCheckedChange={setEmailAlerts} />
                         </div>
                     </div>
                 </div>
 
                 <hr className="border-neutral-100" />
 
-                {/* Push Notifications */}
+                {/* Push / In-App Notifications */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
@@ -86,24 +91,17 @@ export function NotificationsSection() {
                     <div className="space-y-2 mt-4 ml-11 bg-neutral-50/50 p-4 rounded-xl border border-neutral-100">
                         <div className="flex items-center justify-between py-2 border-b border-neutral-200/50">
                             <div>
-                                <p className="font-medium text-sm">Bot Status</p>
-                                <p className="text-xs text-neutral-500">When the recording bot joins or leaves.</p>
+                                <p className="font-medium text-sm">Bot Status & Transcription Ready</p>
+                                <p className="text-xs text-neutral-500">When the bot joins, leaves, or processing completes.</p>
                             </div>
-                            <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between py-2 border-b border-neutral-200/50">
-                            <div>
-                                <p className="font-medium text-sm">Transcription Ready</p>
-                                <p className="text-xs text-neutral-500">When meeting processing is complete.</p>
-                            </div>
-                            <Switch defaultChecked />
+                            <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
                         </div>
                         <div className="flex items-center justify-between py-2">
                             <div>
-                                <p className="font-medium text-sm">Mentions</p>
-                                <p className="text-xs text-neutral-500">When someone mentions you in meeting notes.</p>
+                                <p className="font-medium text-sm">Meeting Reminders</p>
+                                <p className="text-xs text-neutral-500">Alerts before upcoming scheduled meetings.</p>
                             </div>
-                            <Switch defaultChecked />
+                            <Switch checked={meetingReminders} onCheckedChange={setMeetingReminders} />
                         </div>
                     </div>
                 </div>

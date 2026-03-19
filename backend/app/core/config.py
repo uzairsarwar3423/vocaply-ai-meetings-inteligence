@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    ENCRYPTION_KEY: Optional[str] = None # For encrypting OAuth tokens
     
     # DATABASE
     DATABASE_URL: str
@@ -40,6 +41,17 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_MAX_RETRIES: int = 3
     OPENAI_MONTHLY_BUDGET_USD: float = 50.0
+    
+    # ZOOM OAUTH
+    ZOOM_CLIENT_ID: Optional[str] = None
+    ZOOM_CLIENT_SECRET: Optional[str] = None
+    ZOOM_REDIRECT_URI: Optional[str] = None
+    ZOOM_WEBHOOK_SECRET: Optional[str] = None
+    
+    # GOOGLE OAUTH
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: Optional[str] = None
     
     # CORS
     BACKEND_CORS_ORIGINS: List[Union[str, AnyHttpUrl]] = []

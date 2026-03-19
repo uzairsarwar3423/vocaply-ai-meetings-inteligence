@@ -97,10 +97,16 @@ class Transcript(Base):
 
     # ── Indexes ──────────────────────────────────
     __table_args__ = (
+        # Existing indexes
         Index("idx_transcripts_meeting_seq", "meeting_id", "sequence_number"),
         Index("idx_transcripts_speaker", "meeting_id", "speaker_id"),
         Index("idx_transcripts_time", "meeting_id", "start_time"),
         Index("idx_transcripts_search", sa_text("to_tsvector('english', text)"), postgresql_using="gin"),
+
+        # New optimized indexes
+        Index("idx_transcripts_meeting_time", "meeting_id", "start_time", "end_time"),
+        Index("idx_transcripts_speaker_email", "meeting_id", "speaker_email", "start_time"),
+        Index("idx_transcripts_company_created", "company_id", "created_at"),
     )
 
     # ── Properties ───────────────────────────────

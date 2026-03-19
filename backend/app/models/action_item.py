@@ -4,7 +4,7 @@ Vocaply Platform - Day 10
 
 Stores AI-extracted or manually created tasks from meetings.
 """
-
+from sqlalchemy import Index
 import uuid
 import enum
 from datetime import datetime
@@ -113,6 +113,15 @@ class ActionItem(Base):
     meeting = relationship("Meeting", back_populates="action_items")
     company = relationship("Company")
     assigned_to = relationship("User")
+
+    # ── Indexes ──────────────────────────────────
+    __table_args__ = (
+        # New optimized composite indexes
+        Index("idx_action_items_company_status", "company_id", "status", "created_at"),
+        Index("idx_action_items_assigned_due", "assigned_to_id", "due_date", "status"),
+        Index("idx_action_items_meeting_status", "meeting_id", "status"),
+        Index("idx_action_items_priority_status", "company_id", "priority", "status", "created_at"),
+    )
 
     def __repr__(self) -> str:
         return f"<ActionItem id={self.id} meeting={self.meeting_id} status={self.status}>"

@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar, Video, Clock, Users } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { format, formatDistanceToNow } from 'date-fns';
+import { apiClient } from '@/lib/api/client';
 
 interface CalendarEvent {
     id: string;
@@ -41,20 +42,10 @@ export default function EventList({ events, onAutoJoinToggle }: EventListProps) 
         setTogglingEvents(prev => new Set(prev).add(eventId));
 
         try {
-            const response = await fetch('/api/v1/calendar/enable-auto-join', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    event_id: eventId,
-                    enabled: newEnabled,
-                }),
+            await apiClient.post('/calendar/enable-auto-join', {
+                event_id: eventId,
+                enabled: newEnabled,
             });
-
-            if (!response.ok) {
-                throw new Error('Failed to update auto-join');
-            }
 
             toast({
                 title: newEnabled ? 'Auto-Join Enabled' : 'Auto-Join Disabled',

@@ -116,7 +116,7 @@ class ActionItemRepository:
             (items, total_count)
         """
         # Create base stmt without eager loading for COUNT query
-        count_stmt = select(ActionItem).where(ActionItem.company_id == company_id)
+        count_stmt = select(ActionItem).where(ActionItem.company_id == str(company_id))
 
         # Filters
         if status:
@@ -133,9 +133,9 @@ class ActionItemRepository:
             count_stmt = count_stmt.where(ActionItem.is_ai_generated == is_ai_generated)
 
         # Count
-        count_total_stmt = select(func.count()).select_from(count_stmt.subquery())
+        count_total_stmt = count_stmt.with_only_columns(func.count()).select_from(ActionItem)
         count_result = await self.db.execute(count_total_stmt)
-        total = count_result.scalar_one()
+        total = count_result.scalar() or 0
 
         # Sort
         sort_col = getattr(ActionItem, sort_by, ActionItem.created_at)

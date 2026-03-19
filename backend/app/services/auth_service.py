@@ -98,10 +98,49 @@ class AuthService:
             refresh_token=new_refresh_token
         )
 
-    def logout(self, db: Session, *, refresh_token: str):
-        session = session_repo.get_by_refresh_token(db, refresh_token=refresh_token)
-        if session:
-            session_repo.update(db, db_obj=session, obj_in={"is_revoked": True})
+    async def register_user_async(self, db: AsyncSession, *, user_in: UserCreate):
+        """Async user registration"""
+        from sqlalchemy import select
+        from app.utils.password import get_password_hash_async
+        
+        # Check if user exists
+        stmt = select(User).where(User.email == user_in.email)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user:
+            raise HTTPException(
+                status_code=400,
+                detail="The user with this username already exists in the system.",
+            )
+        
+        # Create company
+        slug = user_in.company_name.lower().replace(" ", "-")
+        # Ensure slug unique (simplified)
+        from app.models.company import Company
+        stmt = select(Company).where(Company.slug == slug)
+        result = await db.execute(stmt)
+        company = result.scalar_one_or_none()
+        if company:
+            slug = f"{slug}-{datetime.now().timestamp()}"
+            
+        company = Company(name=user_in.company_name, slug=slug)
+        db.add(company)
+        await db.commit()
+        await db.refresh(company)
+        
+        # Create user with async password hashing
+        password_hash = await get_password_hash_async(user_in.password)
+        user = User(
+            email=user_in.email,
+            password_hash=password_hash,
+            full_name=user_in.full_name,
+            company_id=company.id,
+            role=user_in.role,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
 
     # ============================================
     # ASYNC METHODS (for FastAPI async endpoints)
@@ -153,5 +192,57 @@ class AuthService:
             access_token=access_token,
             refresh_token=refresh_token
         )
+
+    async def refresh_token_async(self, db: AsyncSession, *, refresh_in: TokenRefresh) -> Token:
+        """Async token refresh"""
+        from sqlalchemy import select
+        from app.models.user_session import UserSession
+        
+        # Verify refresh token in DB
+        stmt = select(UserSession).where(UserSession.refresh_token == refresh_in.refresh_token)
+        result = await db.execute(stmt)
+        session = result.scalar_one_or_none()
+        
+        if not session or session.is_revoked or session.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token",
+            )
+        
+        # Create new tokens
+        access_token = create_access_token(subject=session.user_id)
+        new_refresh_token = create_refresh_token(subject=session.user_id)
+        
+        # Invalidate old session and create new one
+        session.is_revoked = True
+        
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+        new_session = UserSession(
+            user_id=session.user_id,
+            refresh_token=new_refresh_token,
+            expires_at=expires_at,
+            user_agent=session.user_agent,
+            ip_address=session.ip_address,
+            is_revoked=False
+        )
+        db.add(new_session)
+        await db.commit()
+        
+        return Token(
+            access_token=access_token,
+            refresh_token=new_refresh_token
+        )
+
+    async def logout_async(self, db: AsyncSession, *, refresh_token: str):
+        """Async logout"""
+        from sqlalchemy import select
+        from app.models.user_session import UserSession
+        
+        stmt = select(UserSession).where(UserSession.refresh_token == refresh_token)
+        result = await db.execute(stmt)
+        session = result.scalar_one_or_none()
+        if session:
+            session.is_revoked = True
+            await db.commit()
 
 auth_service = AuthService()

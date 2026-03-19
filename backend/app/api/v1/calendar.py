@@ -4,13 +4,14 @@ Calendar API Endpoints
 
 import uuid
 from typing import Optional
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.db.session import get_async_db
-from app.core.security import get_current_user
+from app.api.deps import get_current_user_async as get_current_user
 from app.services.calendar import CalendarSyncService, AutoJoinScheduler
 from app.models.calendar_event import CalendarEvent
 from sqlalchemy import select, and_
@@ -82,9 +83,8 @@ async def get_calendar_events(
     db: AsyncSession = Depends(get_async_db),
 ):
     """Get calendar events"""
-    from datetime import datetime, timedelta
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     end_time = now + timedelta(days=days_ahead)
 
     # Build query

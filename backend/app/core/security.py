@@ -46,3 +46,36 @@ def get_current_user(
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
+
+
+def encrypt_token(token: str) -> str:
+    """Encrypt a token using Fernet symmetric encryption"""
+    from cryptography.fernet import Fernet
+    import base64
+    
+    # Use SECRET_KEY to derive a valid Fernet key if ENCRYPTION_KEY is missing
+    key = settings.ENCRYPTION_KEY
+    if not key:
+        # Fernet keys must be 32 URL-safe base64-encoded bytes
+        # We'll just take the first 32 chars of SECRET_KEY and base64 it
+        key = base64.urlsafe_b64encode(settings.SECRET_KEY[:32].ljust(32, '0').encode())
+    else:
+        key = key.encode()
+        
+    f = Fernet(key)
+    return f.encrypt(token.encode()).decode()
+
+
+def decrypt_token(encrypted_token: str) -> str:
+    """Decrypt a token using Fernet symmetric encryption"""
+    from cryptography.fernet import Fernet
+    import base64
+    
+    key = settings.ENCRYPTION_KEY
+    if not key:
+        key = base64.urlsafe_b64encode(settings.SECRET_KEY[:32].ljust(32, '0').encode())
+    else:
+        key = key.encode()
+        
+    f = Fernet(key)
+    return f.decrypt(encrypted_token.encode()).decode()

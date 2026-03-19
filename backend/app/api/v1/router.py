@@ -18,6 +18,8 @@ from app.api.v1 import (
     webhooks,       # External/Internal Webhooks (Day 15)
     bot,            # Bot Integration (Day 19)
     calendar,       # Calendar Integration (Day 20)
+    integrations,   # Platform Integrations (Day 22)
+    users,          # User Management & Settings (Day 23)
 )
 
 # ============================================
@@ -108,12 +110,20 @@ api_router.include_router(
     tags=["Calendar"]
 )
 
-# ── Future Endpoints ────────────────────────────────────────────
-# api_router.include_router(
-#     integrations.router,
-#     prefix="/integrations",
-#     tags=["Integrations"]
-# )
+# ── Integrations (Day 22) ───────────────────────────────────────────
+api_router.include_router(
+    integrations.router,
+    prefix="/integrations",
+    tags=["Integrations"]
+)
+
+# ── User Management (Day 23) ───────────────────────────────────────────
+api_router.include_router(
+    users.router,
+    prefix="/users",
+    tags=["Users"]
+)
+
 #
 # api_router.include_router(
 #     analytics.router,
