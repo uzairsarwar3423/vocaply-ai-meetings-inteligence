@@ -1,12 +1,26 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { apiClient } from '@/lib/api/client';
 
 export default function ZoomCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Verifying with Zoom...</h2>
+                <p className="text-neutral-500">Please wait while we finalize your account connection.</p>
+            </div>
+        }>
+            <ZoomCallbackContent />
+        </Suspense>
+    );
+}
+
+function ZoomCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
