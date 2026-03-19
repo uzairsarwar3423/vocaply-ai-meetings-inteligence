@@ -148,14 +148,12 @@ class Meeting(Base):
     timezone          = Column(String(50),  nullable=False, default="UTC")
 
     # ------------------------------------------
-    # ATTENDEES
+    # ATTENDEES (DEPRECATED - Use meeting_attendees table)
     # ------------------------------------------
-    # JSONB array format:
-    # [{ "email": "...", "name": "...", "role": "organizer|attendee",
-    #    "user_id": null, "joined_at": null, "left_at": null }]
-    attendees         = Column(JSONB,    nullable=False, default=list,   server_default="[]")
-    organizer_email   = Column(String(255), nullable=True)
-    participant_count = Column(Integer,  nullable=False, default=0)
+    # Legacy JSONB field - will be removed after migration
+    attendees = Column(JSONB, nullable=False, default=list, server_default="[]")
+    organizer_email = Column(String(255), nullable=True)
+    participant_count = Column(Integer, nullable=False, default=0)
 
     # ------------------------------------------
     # STATUS
@@ -215,11 +213,19 @@ class Meeting(Base):
     # ------------------------------------------
     # RELATIONSHIPS
     # ------------------------------------------
-    company      = relationship("Company",        back_populates="meetings",     lazy="select")
-    creator      = relationship("User",           back_populates="meetings",     foreign_keys=[created_by],     lazy="select")
-    
+    company = relationship("Company", back_populates="meetings", lazy="select")
+    creator = relationship("User", back_populates="meetings", foreign_keys=[created_by], lazy="select")
+
+    # Attendee relationships (normalized)
+    meeting_attendees = relationship(
+        "MeetingAttendee",
+        back_populates="meeting",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     # Transcription relationships
-    transcripts  = relationship("Transcript",     back_populates="meeting",      cascade="all, delete-orphan", lazy="dynamic")
+    transcripts = relationship("Transcript", back_populates="meeting", cascade="all, delete-orphan", lazy="dynamic")
     transcript_metadata = relationship("TranscriptMetadata", back_populates="meeting", uselist=False, cascade="all, delete-orphan")
     
     # AI Analysis relationships
@@ -262,10 +268,18 @@ class Meeting(Base):
     # COMPOSITE INDEXES
     # ------------------------------------------
     __table_args__ = (
+        # Existing indexes
         Index("idx_meetings_company_status",    "company_id", "status"),
         Index("idx_meetings_company_scheduled", "company_id", "scheduled_start"),
         Index("idx_meetings_company_created",   "company_id", "created_at"),
         Index("idx_meetings_platform_id",       "platform",   "platform_meeting_id"),
+
+        # New optimized composite indexes
+        Index("idx_meetings_company_status_created", "company_id", "status", "created_at"),
+        Index("idx_meetings_company_platform", "company_id", "platform", "created_at"),
+        Index("idx_meetings_scheduled_range", "company_id", "scheduled_start", "scheduled_end"),
+        Index("idx_meetings_creator_status", "created_by", "status", "created_at"),
+
         {"extend_existing": True},
     )
 
@@ -364,21 +378,45 @@ class Meeting(Base):
             self.duration_minutes = int(seconds / 60)
 
     def add_attendee(self, email: str, name: str = None, role: str = "attendee") -> None:
-        existing_emails = {a.get("email") for a in self.attendees}
-        if email not in existing_emails:
-            self.attendees = [*self.attendees, {
-                "email":     email,
-                "name":      name or email,
-                "role":      role,
-                "user_id":   None,
-                "joined_at": None,
-                "left_at":   None,
-            }]
-            self.participant_count = len(self.attendees)
+        """Add attendee using the normalized MeetingAttendee table"""
+        from app.models.meeting_attendee import MeetingAttendee
+
+        # Check if attendee already exists
+        existing = next((a for a in self.meeting_attendees if a.email == email), None)
+        if existing:
+            return  # Already exists
+
+        # Create new attendee
+        attendee = MeetingAttendee(
+            meeting_id=self.id,
+            company_id=self.company_id,
+            email=email,
+            name=name or email,
+            role=role,
+        )
+        self.meeting_attendees.append(attendee)
+        self.participant_count = len(self.meeting_attendees)
 
     def remove_attendee(self, email: str) -> None:
-        self.attendees        = [a for a in self.attendees if a.get("email") != email]
-        self.participant_count = len(self.attendees)
+        """Remove attendee from the normalized table"""
+        self.meeting_attendees = [a for a in self.meeting_attendees if a.email != email]
+        self.participant_count = len(self.meeting_attendees)
+
+    def get_attendee(self, email: str) -> Optional["MeetingAttendee"]:
+        """Get attendee by email"""
+        return next((a for a in self.meeting_attendees if a.email == email), None)
+
+    def mark_attendee_joined(self, email: str) -> None:
+        """Mark an attendee as joined"""
+        attendee = self.get_attendee(email)
+        if attendee:
+            attendee.mark_joined()
+
+    def mark_attendee_left(self, email: str) -> None:
+        """Mark an attendee as left"""
+        attendee = self.get_attendee(email)
+        if attendee:
+            attendee.mark_left()
 
     def to_dict(self) -> dict:
         return {
@@ -397,7 +435,7 @@ class Meeting(Base):
             "actual_end":               self.actual_end.isoformat()       if self.actual_end       else None,
             "duration_minutes":         self.duration_minutes,
             "timezone":                 self.timezone,
-            "attendees":                self.attendees or [],
+            "attendees": [attendee.to_dict() for attendee in self.meeting_attendees] if self.meeting_attendees else [],
             "organizer_email":          self.organizer_email,
             "participant_count":        self.participant_count,
             "status":                   self.status,

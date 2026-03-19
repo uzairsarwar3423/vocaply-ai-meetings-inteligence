@@ -16,3 +16,6 @@ class ResetPassword(BaseModel):
 
 class ForgotPassword(BaseModel):
     email: EmailStr
+class ZoomOAuthCallback(BaseModel):
+    code: str
+    state: str | None = None
