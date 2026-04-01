@@ -52,6 +52,17 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_REDIRECT_URI: Optional[str] = None
+    GOOGLE_AUTH_REDIRECT_URI: Optional[str] = "http://localhost:3000/auth/callback/google"
+
+    # SENDGRID (Day 26: Email notifications)
+    SENDGRID_API_KEY: Optional[str] = None
+    SENDGRID_FROM_EMAIL: str = "noreply@vocaply.ai"
+
+    # SLACK (Day 26: Slack notifications — stub when not configured)
+    SLACK_BOT_TOKEN: Optional[str] = None
+
+    # FRONTEND (used in email CTA links)
+    FRONTEND_URL: str = "http://localhost:3000"
     
     # CORS
     BACKEND_CORS_ORIGINS: List[Union[str, AnyHttpUrl]] = []

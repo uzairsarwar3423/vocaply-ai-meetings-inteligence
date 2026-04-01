@@ -20,7 +20,9 @@ celery_app = Celery(
     backend=settings.CELERY_RESULT_BACKEND,
     include=[
         "app.workers.transcription_worker",
-        "app.workers.ai_analysis_worker",  # Day 10: AI extraction
+        "app.workers.ai_analysis_worker",      # Day 10: AI extraction
+        "app.workers.notification_worker",     # Day 26: Notifications
+        "app.workers.reminder_worker",         # Day 26: Reminders
     ],
 )
 
@@ -86,6 +88,24 @@ celery_app.conf.beat_schedule = {
         "task": "app.workers.ai_analysis_worker.retry_stuck_analyses",
         "schedule": crontab(minute="*/15"),
     },
+
+    # Day 26: Generate daily digests at 8 AM UTC
+    "send-daily-digest": {
+        "task": "app.workers.notification_worker.send_daily_digest_task",
+        "schedule": crontab(hour=8, minute=0),
+    },
+
+    # Day 26: Send reminders for items due tomorrow at 9 AM UTC
+    "send-reminders": {
+        "task": "app.workers.reminder_worker.send_reminders_task",
+        "schedule": crontab(hour=9, minute=0),
+    },
+
+    # Day 26: Mark overdue items at midnight UTC
+    "mark-overdue": {
+        "task": "app.workers.reminder_worker.mark_overdue_task",
+        "schedule": crontab(hour=0, minute=0),
+    },
 }
 
 # ============================================
@@ -93,8 +113,10 @@ celery_app.conf.beat_schedule = {
 # ============================================
 
 celery_app.conf.task_routes = {
-    "app.workers.transcription_worker.*": {"queue": "transcription"},
-    "app.workers.ai_analysis_worker.*":   {"queue": "ai"},
+    "app.workers.transcription_worker.*":  {"queue": "transcription"},
+    "app.workers.ai_analysis_worker.*":    {"queue": "ai"},
+    "app.workers.notification_worker.*":   {"queue": "notifications"},
+    "app.workers.reminder_worker.*":       {"queue": "notifications"},
 }
 
 # ============================================

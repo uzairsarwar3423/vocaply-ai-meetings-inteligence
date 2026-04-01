@@ -6,7 +6,7 @@ All meeting-related HTTP endpoints.
 """
 
 import uuid
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import (
     APIRouter, Depends, HTTPException, Query,
@@ -416,3 +416,21 @@ async def confirm_recording_upload(
         format=format,
     )
     return MeetingResponse.from_orm(meeting)
+
+
+@router.post("/{meeting_id}/mock-stream", tags=["Meetings"])
+async def trigger_mock_stream(
+    meeting_id: uuid.UUID,
+    current_user: Any = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db)
+):
+    """
+    Simulates a live meeting stream for the given meeting.
+    Used for testing the frontend live dashboard.
+    """
+    from app.services.transcription.mock_streamer import get_mock_streamer
+    streamer = get_mock_streamer(db)
+    # Run in background as it takes time
+    import asyncio
+    asyncio.create_task(streamer.stream_meeting(str(meeting_id), str(current_user.company_id)))
+    return {"message": "Mock stream started in background."}

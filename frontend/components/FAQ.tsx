@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const faqs = [
@@ -27,29 +27,63 @@ const FAQ = () => {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     return (
-        <section id="faq" className="py-24 bg-gray-50/50">
-            <div className="max-w-4xl mx-auto px-6">
-                <div className="text-center mb-16">
-                    <h2 className="text-primary font-bold tracking-wider uppercase text-sm mb-4">FAQ</h2>
-                    <h3 className="text-4xl font-outfit font-bold text-gray-900 mb-4">Questions? We have answers.</h3>
+        <section id="faq" className="py-32 bg-neutral-50/50 relative overflow-hidden">
+            {/* Decoration */}
+            <div className="absolute top-1/2 left-[-10%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -z-10" />
+
+            <div className="max-w-4xl mx-auto px-6 relative z-10">
+                <div className="text-center mb-24">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-900/5 text-neutral-900 border border-neutral-900/10 mb-8"
+                    >
+                        <HelpCircle size={14} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Got Questions?</span>
+                    </motion.div>
+
+                    <motion.h3
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.1 }}
+                        className="text-5xl font-black font-outfit text-neutral-900 mb-8 tracking-tighter"
+                    >
+                        Questions? <br />
+                        <span className="text-primary">We have answers.</span>
+                    </motion.h3>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {faqs.map((faq, index) => (
-                        <div
+                        <motion.div
                             key={index}
-                            className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.05 }}
+                            className={`rounded-[2rem] border transition-all duration-500 overflow-hidden ${openIndex === index
+                                    ? "bg-white border-primary shadow-2xl shadow-primary/5"
+                                    : "bg-white/40 border-white shadow-sm hover:bg-white hover:border-neutral-200"
+                                }`}
                         >
                             <button
                                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                                className="w-full px-8 py-6 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                                className="w-full px-10 py-8 flex items-center justify-between text-left group"
                             >
-                                <span className="text-lg font-semibold text-gray-900">{faq.question}</span>
-                                {openIndex === index ? (
-                                    <Minus className="text-primary shrink-0" size={20} />
-                                ) : (
-                                    <Plus className="text-primary shrink-0" size={20} />
-                                )}
+                                <span className={`text-xl font-black font-outfit tracking-tight transition-colors duration-300 ${openIndex === index ? "text-primary" : "text-neutral-900"
+                                    }`}>
+                                    {faq.question}
+                                </span>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${openIndex === index ? "bg-primary text-white rotate-180" : "bg-neutral-100 text-neutral-400"
+                                    }`}>
+                                    {openIndex === index ? (
+                                        <Minus size={20} strokeWidth={3} />
+                                    ) : (
+                                        <Plus size={20} strokeWidth={3} />
+                                    )}
+                                </div>
                             </button>
                             <AnimatePresence>
                                 {openIndex === index && (
@@ -57,15 +91,15 @@ const FAQ = () => {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: "auto", opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
+                                        transition={{ duration: 0.4, ease: "circOut" }}
                                     >
-                                        <div className="px-8 pb-6 text-gray-600 leading-relaxed font-inter">
+                                        <div className="px-10 pb-10 text-neutral-500 font-medium leading-relaxed tracking-tight text-lg">
                                             {faq.answer}
                                         </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>

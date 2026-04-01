@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Digest — Vocaply</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f1117;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .wrapper {
+            background: #0f1117;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: #1a1d27;
+            border: 1px solid #2d3048;
+            border-radius: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6c47ff 0%, #06b6d4 100%);
+            padding: 32px 40px;
+        }
+
+        .header-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .header-title {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        .body {
+            padding: 36px 40px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: #13151f;
+            border: 1px solid #2d3048;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f9fafb;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 11px;
+            color: #4b5563;
+            font-weight: 500;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            background: #13151f;
+            border-bottom: 1px solid #1e2235;
+        }
+
+        td {
+            font-size: 13px;
+            color: #9ca3af;
+            padding: 10px 12px;
+            border-bottom: 1px solid #1e2235;
+            vertical-align: top;
+        }
+
+        td.title {
+            color: #e5e7eb;
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-overdue {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .badge-high {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .badge-medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .badge-low {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .cta {
+            display: block;
+            width: fit-content;
+            background: linear-gradient(135deg, #6c47ff, #06b6d4);
+            color: #fff;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            padding: 24px 40px;
+            border-top: 1px solid #1e2235;
+        }
+
+        .footer p {
+            font-size: 12px;
+            color: #4b5563;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="card">
+            <div class="header">
+                <div class="header-logo">Vocaply AI</div>
+                <div class="header-title">Your Daily Action Item Digest — {{ date }}</div>
+            </div>
+            <div class="body">
+                <p style="color:#c9d1d9; font-size:15px; margin-bottom:24px;">Hi {{ user_name }}, here's your daily
+                    summary:</p>
+
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-num">{{ stats.total }}</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" style="color:#f59e0b">{{ stats.pending }}</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" style="color:#ef4444">{{ stats.overdue }}</div>
+                        <div class="stat-label">Overdue</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" style="color:#22c55e">{{ stats.completed }}</div>
+                        <div class="stat-label">Done</div>
+                    </div>
+                </div>
+
+                {% if items %}
+                <p class="section-title">Pending Items</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Priority</th>
+                            <th>Due</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td class="title">{{ item.title }}</td>
+                            <td><span class="badge badge-{{ item.priority }}">{{ item.priority }}</span></td>
+                            <td>{{ item.due_date or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                <a class="cta" href="{{ frontend_url }}/action-items">View All Action Items →</a>
+            </div>
+            <div class="footer">
+                <p>Manage digest preferences in <a href="{{ frontend_url }}/settings"
+                        style="color:#6c47ff;">settings</a>.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

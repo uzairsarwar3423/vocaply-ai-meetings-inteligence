@@ -19,6 +19,7 @@ class ClientEvent(str, Enum):
     SUBSCRIBE           = "subscribe"
     UNSUBSCRIBE         = "unsubscribe"
     PING                = "ping"
+    CHAT_MESSAGE        = "chat_message"
 
 
 class ServerEvent(str, Enum):
@@ -44,6 +45,8 @@ class ServerEvent(str, Enum):
     # Bot/transcription events
     BOT_STATUS_CHANGED  = "bot_status_changed"
     TRANSCRIPT_CHUNK    = "transcript_chunk"
+    CHAT_RESPONSE       = "chat_response"
+    LIVE_ACTION_ITEM    = "live_action_item"
 
 
 # ── Subscription Channels ──────────────────────────────────────────────────────
@@ -51,6 +54,7 @@ class ServerEvent(str, Enum):
 class SubscriptionChannel(str, Enum):
     """Available subscription channels."""
     MEETING       = "meeting"
+    MEETING_LIVE  = "meeting_live"
     ACTION_ITEMS  = "action_items"
     NOTIFICATIONS = "notifications"
 

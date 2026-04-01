@@ -19,3 +19,6 @@ class ForgotPassword(BaseModel):
 class ZoomOAuthCallback(BaseModel):
     code: str
     state: str | None = None
+class GoogleOAuthCallback(BaseModel):
+    code: str
+    state: str | None = None

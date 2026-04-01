@@ -20,6 +20,8 @@ from app.api.v1 import (
     calendar,       # Calendar Integration (Day 20)
     integrations,   # Platform Integrations (Day 22)
     users,          # User Management & Settings (Day 23)
+    notifications,  # Notifications & Reminders (Day 26)
+    analytics,      # Analytics Dashboard (Day 27)
 )
 
 # ============================================
@@ -124,15 +126,16 @@ api_router.include_router(
     tags=["Users"]
 )
 
-#
-# api_router.include_router(
-#     analytics.router,
-#     prefix="/analytics",
-#     tags=["Analytics"]
-# )
-#
-# api_router.include_router(
-#     webhooks.router,
-#     prefix="/webhooks",
-#     tags=["Webhooks"]
-# )
+# ── Notifications & Reminders (Day 26) ──────────────────────────────────
+api_router.include_router(
+    notifications.router,
+    prefix="/notifications",
+    tags=["Notifications"]
+)
+
+# ── Analytics Dashboard (Day 27) ─────────────────────────────────────────────
+api_router.include_router(
+    analytics.router,
+    prefix="/analytics",
+    tags=["Analytics"]
+)

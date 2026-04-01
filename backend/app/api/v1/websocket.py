@@ -104,6 +104,29 @@ async def websocket_endpoint(websocket: WebSocket):
                 elif event == ClientEvent.PING:
                     await ws_manager.handle_ping(conn)
 
+                elif event == ClientEvent.CHAT_MESSAGE:
+                    if not conn.is_authenticated:
+                        await _send_error(conn, WSErrorCode.AUTHENTICATION_REQUIRED,
+                                          "Authenticate first.")
+                    else:
+                        meeting_id = data.get("meeting_id")
+                        message    = data.get("message")
+                        if not meeting_id or not message:
+                            await _send_error(conn, WSErrorCode.INVALID_MESSAGE,
+                                              "meeting_id and message are required.")
+                        else:
+                            from app.db.session import SessionLocal
+                            from app.services.ai.chat_service import get_chat_service
+                            async with SessionLocal() as db:
+                                chat_service = get_chat_service(db)
+                                await chat_service.handle_message(
+                                    meeting_id=meeting_id,
+                                    company_id=conn.company_id,
+                                    user_id=conn.user_id,
+                                    message=message,
+                                    request_id=req_id
+                                )
+
                 else:
                     await _send_error(conn, WSErrorCode.UNKNOWN_EVENT,
                                       f"Unknown event: {event!r}")

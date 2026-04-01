@@ -10,6 +10,7 @@ from app.models.ai_usage import AIUsage, AIFeatureType, AIRequestStatus
 from app.models.calendar_event import CalendarEvent
 from app.models.bot_session import BotSession
 from app.models.platform_connection import PlatformConnection
+from app.models.notification import Notification, NotificationType, NotificationChannel
 
 __all__ = [
     "Company", 
@@ -26,7 +27,10 @@ __all__ = [
     "AIRequestStatus",
     "CalendarEvent",
     "BotSession",
-    "PlatformConnection"
+    "PlatformConnection",
+    "Notification",
+    "NotificationType",
+    "NotificationChannel",
 ]
 
 

@@ -5,9 +5,10 @@ import { useMeetings } from '@/hooks/useMeetings';
 import { MeetingList } from '@/components/meetings/MeetingList/MeetingList';
 import { MeetingFilters } from '@/components/meetings/MeetingFilters/MeetingFilters';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Layout } from 'lucide-react';
 import { CreateMeetingModal } from '@/components/meetings/CreateMeetingModal/CreateMeetingModal';
 import { CreateMeetingDTO } from '@/types/meeting';
+import { motion } from 'framer-motion';
 
 export default function MeetingsPage() {
     const {
@@ -57,32 +58,50 @@ export default function MeetingsPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-700">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="container mx-auto px-4 py-8 max-w-7xl pb-32"
+        >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
                 <div>
-                    <h1 className="text-4xl font-extrabold font-outfit text-neutral-900 tracking-tight">My Meetings</h1>
-                    <p className="text-neutral-500 mt-2 font-medium">
-                        Manage your upcoming schedule and review past meeting insights.
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="h-1 w-8 bg-primary rounded-full" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Workspace</span>
+                    </div>
+                    <h1 className="text-5xl font-black font-outfit text-neutral-900 tracking-tighter">My Meetings</h1>
+                    <p className="text-neutral-400 mt-2 font-semibold">
+                        Access and manage your processed intelligence.
                     </p>
                 </div>
                 <Button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="w-full md:w-auto px-6 py-4 rounded-xl bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all font-bold"
+                    className="w-full md:w-auto px-8 py-7 rounded-[2rem] bg-primary hover:bg-primary-600 shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all font-black uppercase tracking-widest text-[11px] group"
                 >
-                    <Plus className="w-5 h-5 mr-2" />
-                    New Meeting
+                    <Plus className="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform duration-300" />
+                    New Workspace
                 </Button>
             </div>
 
-            <div className="flex flex-col lg:grid lg:grid-cols-4 gap-8">
+            <div className="flex flex-col lg:grid lg:grid-cols-4 gap-12">
                 {/* Sidebar Filters */}
-                <aside className="lg:col-span-1 space-y-6">
+                <aside className="lg:col-span-1 space-y-8">
                     <MeetingFilters filters={filters} onFilterChange={setFilters} />
 
                     {/* Stats Widget */}
-                    <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10">
-                        <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Total Meetings</p>
-                        <p className="text-3xl font-black text-primary font-outfit">{totalMeetings}</p>
+                    <div className="glass-card rounded-[2.5rem] p-8 border-white/30 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full -mr-6 -mt-6 group-hover:scale-110 transition-transform" />
+                        <div className="relative z-10">
+                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-3">Meeting Index</p>
+                            <div className="flex items-baseline gap-2">
+                                <p className="text-5xl font-black text-neutral-900 font-outfit tracking-tighter">{totalMeetings}</p>
+                                <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Total</span>
+                            </div>
+                            <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                <Layout size={14} className="text-primary" />
+                                Updated just now
+                            </div>
+                        </div>
                     </div>
                 </aside>
 
@@ -110,6 +129,6 @@ export default function MeetingsPage() {
                 onSubmit={handleCreateMeeting}
                 isSubmitting={isSubmitting}
             />
-        </div>
+        </motion.div>
     );
 }

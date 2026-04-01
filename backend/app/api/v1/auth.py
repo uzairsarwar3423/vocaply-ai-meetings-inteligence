@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.services import auth_service
 from app.services.zoom_oauth import zoom_oauth_service
+from app.services.google_oauth import google_oauth_service
 from app.schemas import user as user_schema
 from app.schemas import auth as auth_schema
 from app.schemas import token as token_schema
@@ -135,4 +136,41 @@ async def zoom_oauth_callback(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to process Zoom OAuth: {str(e)}"
+        )
+@router.post("/google/callback", response_model=token_schema.Token)
+async def google_oauth_callback(
+    request: Request,
+    google_callback: auth_schema.GoogleOAuthCallback,
+    db: AsyncSession = Depends(get_async_db)
+) -> Any:
+    """
+    Handle Google OAuth callback.
+    Exchange authorization code for Google tokens and create/retrieve app user.
+    """
+    if not google_callback.code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Authorization code is required"
+        )
+    
+    try:
+        user_agent = request.headers.get("user-agent")
+        ip_address = request.client.host
+        
+        # Exchange Google code for tokens and get/create user
+        app_tokens, user = await google_oauth_service.handle_google_oauth_callback(
+            db, 
+            code=google_callback.code,
+            user_agent=user_agent,
+            ip_address=ip_address
+        )
+        
+        return app_tokens
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to process Google OAuth: {str(e)}"
         )

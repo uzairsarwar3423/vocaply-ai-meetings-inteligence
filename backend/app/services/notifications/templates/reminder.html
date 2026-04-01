@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reminder — Vocaply</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0f1117;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .wrapper {
+            background: #0f1117;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: #1a1d27;
+            border: 1px solid #2d3048;
+            border-radius: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            padding: 32px 40px;
+        }
+
+        .header-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .header-logo span {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+        }
+
+        .body {
+            padding: 36px 40px;
+        }
+
+        .urgency-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #f59e0b;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .task-card {
+            background: #13151f;
+            border: 1px solid #2d3048;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f9fafb;
+            margin: 0 0 10px;
+        }
+
+        .due-date {
+            font-size: 13px;
+            color: #f59e0b;
+            font-weight: 500;
+        }
+
+        .cta {
+            display: block;
+            width: fit-content;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 28px 0;
+        }
+
+        .footer {
+            padding: 24px 40px;
+            border-top: 1px solid #1e2235;
+        }
+
+        .footer p {
+            font-size: 12px;
+            color: #4b5563;
+            margin: 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="card">
+            <div class="header">
+                <div class="header-logo">Vocaply <span>AI</span></div>
+            </div>
+            <div class="body">
+                <div class="urgency-badge">⏰ Reminder</div>
+                <p style="color:#c9d1d9; font-size:15px; margin-bottom:20px;">
+                    Hi {{ user_name }}, you have an action item due soon.
+                </p>
+
+                <div class="task-card">
+                    <p class="task-title">{{ title }}</p>
+                    <p style="color:#9ca3af; font-size:14px; margin:0 0 10px;">{{ body }}</p>
+                    {% if metadata.due_date %}
+                    <p class="due-date">📅 Due: {{ metadata.due_date }}</p>
+                    {% endif %}
+                </div>
+
+                <a class="cta" href="{{ metadata.url | default(frontend_url) }}">Complete Now →</a>
+
+                <p style="color:#6b7280; font-size:13px; line-height:1.6;">
+                    Mark it complete or update its status from your dashboard to stop receiving reminders.
+                </p>
+            </div>
+            <div class="footer">
+                <p>Manage your notification preferences in <a href="{{ frontend_url }}/settings"
+                        style="color:#f59e0b;">account settings</a>.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Bell, Search, User } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 export interface DashboardHeaderProps {
     title: string;
@@ -37,10 +38,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="relative p-2 rounded-xl text-neutral-500 hover:bg-neutral-50 transition-colors group">
-                        <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                        <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
-                    </button>
+                    <NotificationBell />
 
                     <div className="h-8 w-px bg-neutral-200 mx-2" />
 

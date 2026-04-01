@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Action Item Assigned — Vocaply</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0f1117; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .wrapper { background: #0f1117; padding: 40px 20px; }
+    .card { background: #1a1d27; border: 1px solid #2d3048; border-radius: 16px; max-width: 600px; margin: 0 auto; overflow: hidden; }
+    .header { background: linear-gradient(135deg, #6c47ff 0%, #4f8eff 100%); padding: 32px 40px; }
+    .header-logo { font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; }
+    .header-logo span { color: rgba(255,255,255,0.6); font-weight: 400; }
+    .body { padding: 36px 40px; }
+    .greeting { font-size: 16px; color: #9ca3af; margin-bottom: 24px; }
+    .task-card { background: #13151f; border: 1px solid #2d3048; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
+    .task-title { font-size: 18px; font-weight: 600; color: #f9fafb; margin: 0 0 12px; }
+    .meta-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+    .meta-pill { background: #1e2235; border: 1px solid #2d3048; border-radius: 6px; padding: 4px 12px; font-size: 12px; color: #9ca3af; }
+    .meta-pill strong { color: #c9d1d9; }
+    .cta { display: block; width: fit-content; background: linear-gradient(135deg, #6c47ff 0%, #4f8eff 100%); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 600; font-size: 15px; margin: 28px 0; }
+    .footer { padding: 24px 40px; border-top: 1px solid #1e2235; }
+    .footer p { font-size: 12px; color: #4b5563; margin: 0; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <div class="header-logo">Vocaply <span>AI</span></div>
+      </div>
+      <div class="body">
+        <p class="greeting">Hi {{ user_name }},</p>
+        <p style="color:#c9d1d9; font-size:15px; margin-bottom:20px;">
+          A new action item has been assigned to you from a recent meeting.
+        </p>
+
+        <div class="task-card">
+          <p class="task-title">{{ title }}</p>
+          <p style="color:#9ca3af; font-size:14px; margin:0 0 12px;">{{ body }}</p>
+          <div class="meta-row">
+            {% if metadata.meeting_title %}
+            <div class="meta-pill">Meeting: <strong>{{ metadata.meeting_title }}</strong></div>
+            {% endif %}
+            {% if metadata.due_date %}
+            <div class="meta-pill">Due: <strong>{{ metadata.due_date }}</strong></div>
+            {% endif %}
+          </div>
+        </div>
+
+        <a class="cta" href="{{ metadata.url | default(frontend_url) }}">View Action Item →</a>
+
+        <p style="color:#6b7280; font-size:13px; line-height:1.6;">
+          You can update the status, add notes, or reassign this item from your Vocaply dashboard.
+        </p>
+      </div>
+      <div class="footer">
+        <p>You're receiving this because you're a member of a Vocaply workspace.<br/>
+        To manage your notification preferences, visit your <a href="{{ frontend_url }}/settings" style="color:#6c47ff;">account settings</a>.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -35,5 +35,29 @@ export const authService = {
     async getMe() {
         const response = await apiClient.get<User>("/auth/me");
         return response.data;
+    },
+
+    loginWithGoogle() {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_AUTH_REDIRECT_URI;
+        const scope = "openid email profile";
+        const responseType = "code";
+
+        const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&access_type=offline&prompt=select_account`;
+
+        window.location.href = url;
+    },
+
+    async handleGoogleCallback(code: string) {
+        const response = await apiClient.post<AuthTokens>("/auth/google/callback", { code });
+        const tokens = response.data;
+
+        // Fetch user info after login
+        const userResponse = await apiClient.get<User>("/auth/me", {
+            headers: { Authorization: `Bearer ${tokens.access_token}` }
+        });
+
+        useAuthStore.getState().setAuth(userResponse.data, tokens);
+        return { user: userResponse.data, tokens };
     }
 };
